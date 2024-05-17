@@ -26,7 +26,7 @@ contract LoanManager {
         uint startTime = block.timestamp;
         uint endTime = startTime + (_loanPeriod * 1 days);
 
-        Loan memory newLoan = Loan(payable(msg.sender), _borrower, _amount, _interestRate, _loanPeriod, startTime, endTime, true, false);
+        Loan memory newLoan = Loan(payable(msg.sender), _borrower, _amount, _interestRate, _loanPeriod, startTime, endTime, false, true);
 
         loans[_borrower].push(newLoan);
     }
@@ -37,13 +37,14 @@ contract LoanManager {
         return loans[msg.sender][loans[msg.sender].length - 1].interestRate;
     }
 
-    // Function to get the time period of a loan in days    
-    function getLoanPeriod() external view returns (uint) {
+    // Function to get the interest amount of a loan
+    function getInterestAmount() external view returns (uint) {
         require(hasActiveLoan(msg.sender), "The loan for this user does not exist.");
-        return loans[msg.sender][loans[msg.sender].length - 1].loanPeriod;
+        Loan storage userLoan = loans[msg.sender][loans[msg.sender].length - 1];
+        return FinancialLibrary.calculateInterest(userLoan.amount, userLoan.interestRate, userLoan.loanPeriod);
     }
 
-    // Function to get the start date of a loan
+    // Function to get the end time of a loan
     function getLoanEndTime() external view returns (uint) {
         require(hasActiveLoan(msg.sender), "The loan for this user does not exist.");
         return loans[msg.sender][loans[msg.sender].length - 1].endTime;
@@ -59,17 +60,21 @@ contract LoanManager {
             } else if (block.timestamp >= userLoan.endTime && !userLoan.isPaid) {
                 return "expired";
             } else if (userLoan.isPaid) {
-                return "Paid";
+                return "paid";
             }
         }
-        return "Undefined state";
+        return "undefined state";
     }
 
     // Function to allow users to repay a loan
     function repayLoan() external payable {
         require(hasActiveLoan(msg.sender), "The loan for this user does not exist.");
         Loan storage userLoan = loans[msg.sender][loans[msg.sender].length - 1];
-        require(msg.value >= userLoan.amount, "The payment amount is not sufficient.");
+        uint penalty = 0;
+        if (block.timestamp > userLoan.endTime) {
+            penalty = FinancialLibrary.calculatePenalty(userLoan.amount, userLoan.endTime, block.timestamp);
+        }
+        require(msg.value >= userLoan.amount + penalty, "The payment amount is not sufficient.");
         require(!userLoan.isPaid, "The loan has already been paid.");
 
         userLoan.lender.transfer(msg.value);

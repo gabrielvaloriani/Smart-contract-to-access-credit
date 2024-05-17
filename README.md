@@ -61,7 +61,7 @@ The LoanManager contract was tested and deployed on an Ethereum test network, su
 The contract address published on this network can be found in the README.md file of the repository.
 
 Deployed Contract Address
-The address of the LoanManager contract published on an Ethereum test network is 0x0fC5025C764cE34df352757e82f7B5c4Df39A836. Users can interact with the contract using this address to access the loan functionalities offered by the platform.
+The address of the LoanManager contract published on an Ethereum test network is 0x3bfca3b3a91859781d427127dc665265a3443d6e. Users can interact with the contract using this address to access the loan functionalities offered by the platform.
 
 ### API Reference
 
